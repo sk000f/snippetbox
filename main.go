@@ -29,7 +29,11 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		// if request is not a POST then update the response header to include 405 status
 		// and write appropriate message in the response body.
-		// Also add an Allow header to inform client what is accepted
+
+		// add cache-control header
+		w.Header().Add("Cache-Control", "public")
+		w.Header().Add("Cache-Control", "max-age=31536000")
+		// Also set an Allow header to inform client what is accepted
 		w.Header().Set("Allow", http.MethodPost)
 		// use http.Error to automatically call w.WriteHeader and w.Write for us
 		http.Error(w, "Method Not Allowed", 405)
