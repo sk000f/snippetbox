@@ -1,3 +1,3 @@
-module mike.skaife.me/snippetbox
+module github.com/sk000f/snippetbox
 
 go 1.13
