@@ -20,7 +20,9 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 // Handler to show a specific snippet
 func showSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display a specific snippet"))
+	// set Content Type header and return JSON response
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"Response":"Display a snippet"}`))
 }
 
 // Handler to create a new snippet
