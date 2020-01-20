@@ -25,6 +25,16 @@ func showSnippet(w http.ResponseWriter, r *http.Request) {
 
 // Handler to create a new snippet
 func createSnippet(w http.ResponseWriter, r *http.Request) {
+	// Check the request method to block anything that isn't a POST
+	if r.Method != http.MethodPost {
+		// if request is not a POST then update the response header to include 405 status
+		// and write appropriate message in the response body.
+		// Also add an Allow header to inform client what is accepted
+		w.Header().Set("Allow", http.MethodPost)
+		w.WriteHeader(405)
+		w.Write([]byte("Method Not Allowed"))
+		return
+	}
 	w.Write([]byte("Create a new snippet"))
 }
 
