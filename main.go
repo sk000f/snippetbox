@@ -31,8 +31,8 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 		// and write appropriate message in the response body.
 		// Also add an Allow header to inform client what is accepted
 		w.Header().Set("Allow", http.MethodPost)
-		w.WriteHeader(405)
-		w.Write([]byte("Method Not Allowed"))
+		// use http.Error to automatically call w.WriteHeader and w.Write for us
+		http.Error(w, "Method Not Allowed", 405)
 		return
 	}
 	w.Write([]byte("Create a new snippet"))
