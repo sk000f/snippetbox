@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -11,6 +12,9 @@ func main() {
 	cfg := new(config)
 	flag.StringVar(&cfg.addr, "addr", ":4000", "HTTP network address")
 	flag.Parse()
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.LUTC)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
@@ -22,9 +26,9 @@ func main() {
 	mux.Handle("/static", http.NotFoundHandler())
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	log.Printf("Starting server on %s", cfg.addr)
+	infoLog.Printf("Starting server on %s", cfg.addr)
 	err := http.ListenAndServe(cfg.addr, mux)
-	log.Fatal(err)
+	errorLog.Fatal(err)
 }
 
 type config struct {
