@@ -16,10 +16,15 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.LUTC)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile)
 
+	app := &application{
+		errorLog: errorLog,
+		infoLog:  infoLog,
+	}
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/snippet", app.showSnippet)
+	mux.HandleFunc("/snippet/create", app.createSnippet)
 
 	// Serve static files from the ./ui/static/ directory
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
@@ -35,6 +40,11 @@ func main() {
 	infoLog.Printf("Starting server on %s", cfg.addr)
 	err := srv.ListenAndServe()
 	errorLog.Fatal(err)
+}
+
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
 }
 
 type config struct {
