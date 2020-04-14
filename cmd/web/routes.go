@@ -14,11 +14,15 @@ func (app *application) routes() http.Handler {
 		secureHeaders,
 	)
 
+	dynamicMiddleware := alice.New(
+		app.session.Enable,
+	)
+
 	mux := pat.New()
-	mux.Get("/", http.HandlerFunc(app.home))
-	mux.Get("/snippet/create", http.HandlerFunc(app.createSnippetForm))
-	mux.Post("/snippet/create", http.HandlerFunc(app.createSnippet))
-	mux.Get("/snippet/:id", http.HandlerFunc(app.showSnippet))
+	mux.Get("/", dynamicMiddleware.ThenFunc(app.home))
+	mux.Get("/snippet/create", dynamicMiddleware.ThenFunc(app.createSnippetForm))
+	mux.Post("/snippet/create", dynamicMiddleware.ThenFunc(app.createSnippet))
+	mux.Get("/snippet/:id", dynamicMiddleware.ThenFunc(app.showSnippet))
 
 	// Serve static files from the ./ui/static/ directory
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
