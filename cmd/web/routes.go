@@ -16,6 +16,7 @@ func (app *application) routes() http.Handler {
 
 	dynamicMiddleware := alice.New(
 		app.session.Enable,
+		noSurf,
 	)
 
 	mux := pat.New()
