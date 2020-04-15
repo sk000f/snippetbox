@@ -2,7 +2,12 @@ package mysql
 
 import (
 	"database/sql"
+	"errors"
+	"strings"
 
+	"golang.org/x/crypto/bcrypt"
+
+	"github.com/go-sql-driver/mysql"
 	"github.com/sk000f/snippetbox/pkg/models"
 )
 
@@ -13,6 +18,26 @@ type UserModel struct {
 
 // Insert adds a new user to the database
 func (m *UserModel) Insert(name, email, password string) error {
+
+	// Create bcrypt hash of password from signup form
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+
+	stmt := `INSERT INTO users (name, email, hashed_password, created) VALUES(?, ?, ?, UTC_TIMESTAMP())`
+
+	_, err = m.DB.Exec(stmt, name, email, string(hashedPassword))
+	if err != nil {
+		var mySQLError *mysql.MySQLError
+		if errors.As(err, &mySQLError) {
+			if mySQLError.Number == 1062 && strings.Contains(mySQLError.Message, "users_uc_email") {
+				return models.ErrDuplicateEmail
+			}
+		}
+		return err
+	}
+
 	return nil
 }
 
