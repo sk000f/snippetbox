@@ -127,7 +127,31 @@ func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Authenticate and login the user...")
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+	id, err := app.users.Authenticate(form.Get("email"), form.Get("password"))
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			// display a generic error rather than field specific to avoid revealing information to attackers
+			form.Errors.Add("generic", "Email or Password is incorrect")
+			app.render(w, r, "login.page.tmpl", &templateData{
+				Form: form,
+			})
+		} else {
+			app.serverError(w, err)
+		}
+		return
+	}
+
+	// add new entry into session which we can use to determine if a user is logged in
+	app.session.Put(r, "authenticatedUserID", id)
+
+	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 
 func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
