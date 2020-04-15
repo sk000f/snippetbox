@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/sk000f/snippetbox/pkg/models"
 
 	"github.com/justinas/nosurf"
 )
@@ -47,6 +51,35 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 		w.Header().Add("Cache-Control", "no-store")
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// If user is not authenticated then pass along to next handler in chain
+		exists := app.session.Exists(r, "authenticatedUserID")
+		if !exists {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// If authenticated user is not found or not active in DB then
+		// remove ID from session and pass along the handler chain
+		user, err := app.users.Get(app.session.GetInt(r, "authenticatedUserID"))
+		if errors.Is(err, models.ErrNoRecord) || !user.Active {
+			app.session.Remove(r, "authenticatedUserID")
+			next.ServeHTTP(w, r)
+			return
+		} else if err != nil {
+			app.serverError(w, err)
+			return
+		}
+
+		// Otherwise request is from active authenticated user so add this fact
+		// to the request context and pass along the chain
+		ctx := context.WithValue(r.Context(), contextKeyIsAuthenticated, true)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

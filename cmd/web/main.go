@@ -83,3 +83,7 @@ type config struct {
 	dsn    string
 	secret string
 }
+
+type contextKey string
+
+const contextKeyIsAuthenticated = contextKey("isAuthenticated")
